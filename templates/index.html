@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Advanced Scientific Calculator (with Matrix Mode)</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/mathjs@11.11.0/lib/browser/math.js"></script>
+
+  <script>
+    // Insert button function: visible display + hidden real expression
+    function insert(value) {
+        const displayValue = value
+            .replace("asin(", "sin⁻¹(")
+            .replace("acos(", "cos⁻¹(")
+            .replace("atan(", "tan⁻¹(");
+
+        document.getElementById("display_expression").value += displayValue;
+        document.getElementById("expression").value += value;
+    }
+
+    function clearInput() {
+      document.getElementById("display_expression").value = "";
+      document.getElementById("expression").value = "";
+      document.getElementById("previous_expression").innerText = "";  // <-- added
+
+      // reset full form
+      document.getElementById("calcForm").reset();
+    }
+
+    function backspace() {
+      const disp = document.getElementById("display_expression");
+      const real = document.getElementById("expression");
+
+      if (real.value.includes("Error")) {
+        clearInput();
+        return;
+      }
+
+      disp.value = disp.value.slice(0, -1);
+      real.value = real.value.slice(0, -1);
+    }
+  </script>
+</head>
+
+<script>
+// --- Keyboard support with arrow-key cursor movement ---
+document.addEventListener("keydown", function(e) {
+    const key = e.key;
+    const input = inputEl;
+
+    input.focus();
+
+    if (key === "ArrowLeft") {
+        e.preventDefault();
+        let pos = input.selectionStart;
+        if (pos > 0) input.setSelectionRange(pos - 1, pos - 1);
+        return;
+    }
+
+    if (key === "ArrowRight") {
+        e.preventDefault();
+        let pos = input.selectionStart;
+        if (pos < input.value.length)
+            input.setSelectionRange(pos + 1, pos + 1);
+        return;
+    }
+
+    if (key === "Home") {
+        e.preventDefault();
+        input.setSelectionRange(0, 0);
+        return;
+    }
+
+    if (key === "End") {
+        e.preventDefault();
+        input.setSelectionRange(input.value.length, input.value.length);
+        return;
+    }
+
+    if (!isNaN(key)) {
+        insert(key);
+        return;
+    }
+
+    if ("+-*/().".includes(key)) {
+        insert(key);
+        return;
+    }
+
+    if (key === "Enter") {
+        document.querySelector('button.equals').click();
+        return;
+    }
+
+    if (key === "Backspace") {
+        backspace();
+        return;
+    }
+
+    if (key === "Delete") {
+        clearInput();
+        return;
+    }
+
+    if (key === "s") insert("sin(");
+    if (key === "c") insert("cos(");
+    if (key === "t") insert("tan(");
+
+    if (key === "S") insert("asin(");
+    if (key === "C") insert("acos(");
+    if (key === "T") insert("atan(");
+});
+</script>
+
+<body>
+
+<div class="calculator">
+  <h1>✨ Advanced Scientific Calculator</h1>
+
+  <form method="POST" id="calcForm">
+
+    <!-- NEW: Previous Expression -->
+    <div id="previous_expression"
+         style="text-align:right; font-size:14px; color:#777; min-height:18px; margin-bottom:4px;"></div>
+
+    <!-- Visible Expression (pretty) -->
+    <input type="text" id="display_expression" name="expression_display"
+           placeholder="Enter expression"
+           value="{{ expression|e }}" readonly>
+
+    <!-- Hidden Real Expression -->
+    <input type="hidden" id="expression" name="expression"
+           value="{{ expression|e }}">
+
+    <div class="buttons">
+
+      <!-- Row 1 -->
+      <button type="button" onclick="insert('(')">(</button>
+      <button type="button" onclick="insert(')')">)</button>
+      <button type="button" onclick="insert('^')">xʸ</button>
+      <button type="button" onclick="insert('sqrt(')">√</button>
+      <button type="button" onclick="insert('cuberoot(')">∛</button>
+
+      <!-- Row 2 -->
+      <button type="button" onclick="insert('sin(')">sin</button>
+      <button type="button" onclick="insert('cos(')">cos</button>
+      <button type="button" onclick="insert('tan(')">tan</button>
+      <button type="button" onclick="insert('ln(')">ln</button>
+      <button type="button" onclick="insert('log10(')">log</button>
+
+      <!-- Row 3 -->
+      <button type="button" onclick="insert('asin(')">sin⁻¹</button>
+      <button type="button" onclick="insert('acos(')">cos⁻¹</button>
+      <button type="button" onclick="insert('atan(')">tan⁻¹</button>
+
+      <button type="button" onclick="insert('sinh(')">sinh</button>
+      <button type="button" onclick="insert('cosh(')">cosh</button>
+      <button type="button" onclick="insert('tanh(')">tanh</button>
+
+      <button type="button" onclick="insert('radians(')">°→rad</button>
+      <button type="button" onclick="insert('degrees(')">rad→°</button>
+      <button type="button" onclick="insert('exp(')">eˣ</button>
+      <button type="button" onclick="insert('factorial(')">n!</button>
+
+      <!-- Digits -->
+      <button type="button" onclick="insert('7')">7</button>
+      <button type="button" onclick="insert('8')">8</button>
+      <button type="button" onclick="insert('9')">9</button>
+      <button type="button" onclick="insert('/')">÷</button>
+      <button type="button" onclick="backspace()">⌫</button>
+
+      <button type="button" onclick="insert('4')">4</button>
+      <button type="button" onclick="insert('5')">5</button>
+      <button type="button" onclick="insert('6')">6</button>
+      <button type="button" onclick="insert('*')">×</button>
+      <button type="button" onclick="clearInput()">C</button>
+
+      <button type="button" onclick="insert('1')">1</button>
+      <button type="button" onclick="insert('2')">2</button>
+      <button type="button" onclick="insert('3')">3</button>
+      <button type="button" onclick="insert('-')">−</button>
+      <button type="button" onclick="insert('%')">%</button>
+
+      <button type="button" onclick="insert('0')">0</button>
+      <button type="button" onclick="insert('.')">.</button>
+      <button type="button" onclick="insert('+')">+</button>
+
+      <button type="submit" class="equals">=</button>
+
+      <button type="button" class="matrix-btn" onclick="openMatrixModal()">Matrix Mode</button>
+    </div>
+  </form>
+
+  {% if result != "" %}
+  <div class="result">
+    <h2>Result: {{ result }}</h2>
+  </div>
+  {% endif %}
+</div>
+
+
+<!-- ================== MATRIX MODE (unchanged) ================== -->
+<!-- (Your original matrix modal code remains exactly as is.) -->
+
+<div id="matrixModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Matrix Mode</h2>
+      <button class="close" onclick="closeMatrixModal()">✖</button>
+    </div>
+
+    <div class="modal-body">
+
+      <div class="controls">
+        <label>Rows:</label>
+        <select id="rowsSelect">
+          <option>2</option><option>3</option><option>4</option>
+        </select>
+
+        <label>Cols:</label>
+        <select id="colsSelect">
+          <option>2</option><option>3</option><option>4</option>
+        </select>
+
+        <button onclick="buildMatrixGrid()">Create Matrix A</button>
+        <button onclick="buildMatrixGrid('B')">Create Matrix B / b</button>
+      </div>
+
+      <div class="matrix-grids">
+        <div>
+          <h4>Matrix A</h4>
+          <div id="matrixA" class="matrix-grid"></div>
+        </div>
+
+        <div>
+          <h4>Matrix B (vector b)</h4>
+          <div id="matrixB" class="matrix-grid"></div>
+        </div>
+      </div>
+
+      <div class="ops">
+        <button onclick="doDet()">det(A)</button>
+        <button onclick="doInv()">inv(A)</button>
+        <button onclick="doTranspose()">transpose(A)</button>
+        <button onclick="doRank()">rank(A)</button>
+        <button onclick="doMultiply()">A × B</button>
+        <button onclick="doSolve()">Solve A x = b</button>
+        <button onclick="clearMatrices()">Clear</button>
+      </div>
+
+      <div id="matrixResult" class="matrix-result"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button onclick="closeMatrixModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  /* Matrix code unchanged */
+  const inputEl = document.getElementById('expression');
+
+  function openMatrixModal(){
+    document.getElementById('matrixModal').style.display = 'flex';
+    document.getElementById('rowsSelect').value = '2';
+    document.getElementById('colsSelect').value = '2';
+    buildMatrixGrid();
+    buildMatrixGrid('B');
+  }
+  function closeMatrixModal(){
+    document.getElementById('matrixModal').style.display = 'none';
+  }
+
+  function buildMatrixGrid(target='A'){
+    const rows = parseInt(document.getElementById('rowsSelect').value);
+    const cols = parseInt(document.getElementById('colsSelect').value);
+    const container = document.getElementById(target === 'A' ? 'matrixA' : 'matrixB');
+    container.innerHTML = '';
+    const table = document.createElement('table');
+    table.className = 'grid-table';
+
+    for(let r=0; r<rows; r++){
+      const tr = document.createElement('tr');
+      for(let c=0; c<cols; c++){
+        const td = document.createElement('td');
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.className = 'cell';
+        inp.value = '0';
+        inp.dataset.r = r;
+        inp.dataset.c = c;
+        td.appendChild(inp);
+        tr.appendChild(td);
+      }
+      table.appendChild(tr);
+    }
+    container.appendChild(table);
+  }
+
+  function readMatrix(target='A'){
+    const container = document.getElementById(target === 'A' ? 'matrixA' : 'matrixB');
+    const inputs = container.querySelectorAll('.cell');
+    if(!inputs.length) return null;
+
+    const rows = container.querySelectorAll('tr').length;
+    const cols = container.querySelectorAll('tr')[0].querySelectorAll('td').length;
+
+    const M = [];
+    for(let r=0; r<rows; r++){
+      const row = [];
+      for(let c=0; c<cols; c++){
+        const inp = container.querySelector(`input[data-r='${r}'][data-c='${c}']`);
+        const val = parseFloat(inp.value);
+        row.push(isNaN(val) ? 0 : val);
+      }
+      M.push(row);
+    }
+    return math.matrix(M);
+  }
+
+  function showResult(title, data){
+    const out = document.getElementById('matrixResult');
+    out.innerHTML = `<h4>${title}</h4><pre>${formatData(data)}</pre>`;
+  }
+
+  function formatData(data){
+    try{
+      let arr = data;
+      if (data && data._data) arr = data._data;
+      if (!Array.isArray(arr) || !Array.isArray(arr[0])) return String(data);
+
+      let output = "";
+      const rows = arr.length;
+
+      for (let r = 0; r < rows; r++) {
+        let row = arr[r];
+        let left  = (r === 0) ? "⎡ " : (r === rows - 1) ? "⎣ " : "⎢ ";
+        let right = (r === 0) ? " ⎤" : (r === rows - 1) ? " ⎦" : " ⎥";
+        let line = row.map(v => v.toString().padEnd(6, " ")).join("");
+        output += left + line + right + "\n";
+      }
+
+      return output;
+    } catch (e) {
+      return String(data);
+    }
+  }
+
+  function doDet(){
+    const A = readMatrix('A');
+    if(!A){ alert('Create matrix A first'); return; }
+    try{ showResult('det(A)', math.det(A)); }
+    catch(e){ showResult('det(A) — Error', e.toString()); }
+  }
+
+  function doInv(){
+    const A = readMatrix('A');
+    if(!A){ alert('Create matrix A first'); return; }
+    try{ showResult('inv(A)', math.inv(A)); }
+    catch(e){ showResult('inv(A) — Error', e.toString()); }
+  }
+
+  function doTranspose(){
+    const A = readMatrix('A');
+    if(!A){ alert('Create matrix A first'); return; }
+    try{ showResult('transpose(A)', math.transpose(A)); }
+    catch(e){ showResult('transpose(A) — Error', e.toString()); }
+  }
+
+  function doRank(){
+    const A = readMatrix('A');
+    if(!A){ alert('Create matrix A first'); return; }
+    try{
+      const arr = A.valueOf().map(r => r.slice());
+      const rank = numericRank(arr);
+      showResult('rank(A)', rank);
+    }catch(e){ showResult('rank(A) — Error', e.toString()); }
+  }
+
+  function doMultiply(){
+    const A = readMatrix('A');
+    const B = readMatrix('B');
+    if(!A || !B){ alert('Create both matrices A and B'); return; }
+    try{ showResult('A × B', math.multiply(A, B)); }
+    catch(e){ showResult('A × B — Error', e.toString()); }
+  }
+
+  function doSolve(){
+    const A = readMatrix('A');
+    const B = readMatrix('B');
+    if(!A || !B){ alert('Create matrices A and B'); return; }
+    try{ showResult('Solution x', math.multiply(math.inv(A), B)); }
+    catch(e){ showResult('Solve — Error', e.toString()); }
+  }
+
+  function clearMatrices(){
+    document.getElementById('matrixA').innerHTML = '';
+    document.getElementById('matrixB').innerHTML = '';
+    document.getElementById('matrixResult').innerHTML = '';
+  }
+
+  function numericRank(A){
+    const M = A.map(row => row.slice());
+    const rows = M.length;
+    const cols = M[0].length;
+
+    let rank = 0, row = 0;
+
+    for(let col=0; col<cols && row<rows; col++){
+      let sel = row;
+      for(let i=row; i<rows; i++)
+        if(Math.abs(M[i][col]) > Math.abs(M[sel][col])) sel = i;
+
+      if(Math.abs(M[sel][col]) < 1e-12) continue;
+
+      [M[row], M[sel]] = [M[sel], M[row]];
+      const pivot = M[row][col];
+
+      for(let j=col; j<cols; j++) M[row][j] /= pivot;
+
+      for(let i=0; i<rows; i++){
+        if(i!==row){
+          const factor = M[i][col];
+          for(let j=col; j<cols; j++)
+            M[i][j] -= factor * M[row][j];
+        }
+      }
+      row++;
+      rank++;
+    }
+    return rank;
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') closeMatrixModal();
+  });
+</script>
+
+<!-- NEW: Script to show previous expression on "=" -->
+<script>
+document.getElementById("calcForm").addEventListener("submit", function () {
+    const exp = document.getElementById("display_expression").value;
+
+    if (exp.trim() !== "") {
+        document.getElementById("previous_expression").innerText = exp + " =";
+    }
+});
+</script>
+
+</body>
+</html>
